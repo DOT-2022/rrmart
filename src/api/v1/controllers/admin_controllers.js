@@ -181,7 +181,7 @@ const AdminController = {
             return res.status(404).json({
                 status: false,
                 message: "Unable to create new product. Please try again!",
-                data: []
+                data: error.message
             });
         }
     },

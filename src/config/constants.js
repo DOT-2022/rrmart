@@ -13,7 +13,7 @@ const constants = {
     },
     BASE_URL: {
         LOCAL: `http://localhost:${process.env.PORT}/api/v1/`,
-        PRODUCTION: ''
+        PRODUCTION: 'http://43.205.136.224:${process.env.PORT}/api/v1/'
     },
     NOTIFICATION: {
         FCM_BASE_URL: 'https://fcm.googleapis.com/fcm/send',

@@ -147,17 +147,18 @@ const CommonController = {
     },
     top_10_products: async (req, res) => {
         try {
+            
             let query = 'SELECT p.name, p.slug, p.image1, p.actual_price, p.sale_price, p.description, c.name category_name, c.id category_id FROM products p \
                     JOIN top_products tp ON tp.product_id = p.id \
                     JOIN categories c on c.id = p.category_id \
                     WHERE p.is_active = 1 ORDER BY p.name ASC LIMIT 10';
-
+            console.log(query);
             const products = await models.sequelize.query(query,
                 {
                     type: QueryTypes.SELECT
                 });
 
-            console.log("top products: " + products);
+            console.log("top products: ", products);
 
             if (products) {
                 return res.status(constants.STATUS_CODE.SUCCESS).json({
