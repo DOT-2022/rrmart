@@ -181,7 +181,7 @@ const AdminController = {
             return res.status(404).json({
                 status: false,
                 message: error.message,
-                data: error.message
+                data: error
             });
         }
     },
