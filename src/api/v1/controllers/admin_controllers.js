@@ -180,7 +180,7 @@ const AdminController = {
             console.log("Error", error);
             return res.status(404).json({
                 status: false,
-                message: "Unable to create new product. Please try again!",
+                message: error.message,
                 data: error.message
             });
         }
@@ -448,16 +448,16 @@ const AdminController = {
                         replacements: [order_id],
                         type: QueryTypes.SELECT
                     });
-                    if(picklist) {
-                        console.log(picklist);
-                        response_data.picklist = picklist;
-                    }
-                    console.log("Response data", response_data);
-                    return res.status(constants.STATUS_CODE.SUCCESS).json({
-                        status: true,
-                        message: `List of all the orders sorted as First Order In First Order Out order.`,
-                        data: response_data
-                    });
+                if (picklist) {
+                    console.log(picklist);
+                    response_data.picklist = picklist;
+                }
+                console.log("Response data", response_data);
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: `List of all the orders sorted as First Order In First Order Out order.`,
+                    data: response_data
+                });
             } else {
                 return res.status(constants.STATUS_CODE.FAIL).json({
                     status: false,
@@ -480,22 +480,22 @@ const AdminController = {
             // Step 1: Find the order with order id
             const orders = await models.Order.findOne({
                 where: {
-                    id : order_id,
-                    is_active : 1
+                    id: order_id,
+                    is_active: 1
                 }
             });
 
-            if(orders) {
+            if (orders) {
                 switch (status) {
                     case 'rejected':
-                        if(remarks != "") {
+                        if (remarks != "") {
                             await models.Order.update({
                                 status: constants.STATUS.RJ,
                                 re
                             });
                         }
                         break;
-                
+
                     default:
                         break;
                 }
