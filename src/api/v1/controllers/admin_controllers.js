@@ -178,7 +178,7 @@ const AdminController = {
             });
         } catch (error) {
             console.log("Error", error);
-            return res.status(404).json({
+            return res.status(constants.STATUS_CODE.FAIL).json({
                 status: false,
                 message: error.message,
                 data: error
