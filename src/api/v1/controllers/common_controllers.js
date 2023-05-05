@@ -7,38 +7,82 @@ const constants = require('../../../config/constants');
 
 const CommonController = {
     send_otp: async (req, res) => {
-        let { phone_no, device_id } = req.body;
-        let flag = false;
-        console.log(phone_no, device_id);
+        let { phone_no, device_id, otp_for } = req.body;
+        console.log(phone_no, device_id, otp_for);
 
         try {
             if (device_id != "") {
                 if (phone_no != "") {
-                    flag = true;
-                }
-            }
+                    const userCount = await models.User.count({
+                        where: {
+                            mobile: phone_no,
+                            is_active: 1
+                        }
+                    });
 
-            if (flag) {
-                let notification_title = constants.NOTIFICATION.TITLE;
-                let otp = helpers.generateSixDigitOTP();
-                let notification_body = `${constants.NOTIFICATION.MESSAGE_II} ${otp}. ${constants.NOTIFICATION.MESSAGE_I}`;
-                console.log(notification_title, notification_body);
-                const push_otp = await notification.send_notification(device_id, notification_title, notification_body);
-                console.log("Notification Response", push_otp)
-                if (push_otp.status) {
-                    return res.status(200).json({
-                        status: true,
-                        message: push_otp.message,
-                        data: [{
-                            otp: otp
-                        }]
-                    });
-                } else {
-                    return res.status(401).json({
-                        status: false,
-                        message: push_otp.message,
-                        data: []
-                    });
+                    let notification_title = constants.NOTIFICATION.TITLE;
+                    let otp = helpers.generateSixDigitOTP();
+                    let notification_body = `${constants.NOTIFICATION.MESSAGE_II} ${otp}. ${constants.NOTIFICATION.MESSAGE_I}`;
+                    console.log(notification_title, notification_body);
+                    
+                    if (userCount > 0) {
+                        console.log("inside > 0 : user count", userCount, typeof(userCount));
+                        // user with the mobile number found
+                        if(otp_for == "signin") {
+                            const push_otp = await notification.send_notification(device_id, notification_title, notification_body);
+                            console.log("Notification Response", push_otp)
+                            if (push_otp.status) {
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: true,
+                                    message: push_otp.message,
+                                    data: [{
+                                        otp: otp
+                                    }]
+                                });
+                            } else {
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: push_otp.message,
+                                    data: []
+                                });
+                            }
+                        } else if(otp_for == "signup") {
+                            console.log("inside signup otp for", userCount, typeof(userCount));
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Phone Number already in use. Cannot register another account with same phone number.",
+                                data: []
+                            });
+                        }
+                    } else {
+                        if(otp_for == "signin") {
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "User not found. Please register to create a new account.",
+                                data: []
+                            });
+                        } else if(otp_for == "signup") {
+                            console.log("else part inside signup otp for", userCount, typeof(userCount));
+
+                            const push_otp = await notification.send_notification(device_id, notification_title, notification_body);
+                            console.log("Notification Response", push_otp)
+                            if (push_otp.status) {
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: true,
+                                    message: push_otp.message,
+                                    data: [{
+                                        otp: otp
+                                    }]
+                                });
+                            } else {
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: push_otp.message,
+                                    data: []
+                                });
+                            }
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -147,7 +191,7 @@ const CommonController = {
     },
     top_10_products: async (req, res) => {
         try {
-            
+
             let query = 'SELECT p.name, p.slug, p.image1, p.actual_price, p.sale_price, p.description, c.name category_name, c.id category_id FROM products p \
                     JOIN top_products tp ON tp.product_id = p.id \
                     JOIN categories c on c.id = p.category_id \
@@ -164,6 +208,80 @@ const CommonController = {
                 return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: true,
                     message: "List of top products",
+                    data: products
+                });
+            } else {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "No Products",
+                    data: []
+                });
+            }
+
+        } catch (error) {
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: false,
+                message: error.message,
+                data: []
+            });
+        }
+    },
+    getListOfOrders: async (req, res) => {
+        const { user_id } = req.params;
+
+        try {
+            const selectOrdersQuery = 'SELECT o.id, o.order_name, o.order_type, o.status, o.remarks, o.is_active, o.created_at, FROM_UNIXTIME(o.created_at, \'%D %M %Y %H:%i\') AS ordered_at, p.id picklist_id, p.status picklist_status, p.remarks picklist_remarks FROM rr_mart_db.orders o JOIN picklists p on p.order_name = o.order_name WHERE o.user_id = ? ORDER BY o.created_at DESC';
+
+            const orderData = await models.sequelize.query(
+                selectOrdersQuery,
+                {
+                    type: QueryTypes.SELECT,
+                    replacements: [user_id]
+                });
+
+            if (orderData) {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "Successfully retrived your orders history",
+                    data: orderData
+                });
+            } else {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "Orders not yet placed.",
+                    data: []
+                });
+            }
+
+
+        } catch (error) {
+            return res.status(constants.STATUS_CODE.FAIL).json({
+                status: false,
+                message: "Not able to get the orders. Please try again.",
+                data: []
+            });
+        }
+
+    },
+    get_all_products: async (req, res) => {
+        try {
+
+            let query = 'SELECT p.id, p.name, p.slug, p.image1, p.actual_price, p.sale_price, p.description, c.name category_name, c.id category_id FROM products p \
+                    JOIN top_products tp ON tp.product_id = p.id \
+                    JOIN categories c on c.id = p.category_id \
+                    WHERE p.is_active = 1 ORDER BY c.id ASC, p.name ASC';
+            console.log(query);
+            const products = await models.sequelize.query(query,
+                {
+                    type: QueryTypes.SELECT
+                });
+
+            console.log("top products: ", products);
+
+            if (products) {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "List of products",
                     data: products
                 });
             } else {

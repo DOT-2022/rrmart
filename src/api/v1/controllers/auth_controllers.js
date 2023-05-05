@@ -36,13 +36,13 @@ const AuthController = {
                 }
 
                 return res.status(constants.STATUS_CODE.SUCCESS).json({
-                    status: false,
+                    status: true,
                     message: "Login Successful!",
                     data: user
                 });
 
             } else {
-                return res.status(constants.STATUS_CODE.FAIL).json({
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: false,
                     message: "User not found. Try registering yourself.",
                     data: []
@@ -52,9 +52,9 @@ const AuthController = {
         } catch (err) {
             await transaction.rollback();
 
-            return res.status(constants.STATUS_CODE.FAIL).json({
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
-                message: err,
+                message: err.message,
                 data: []
             });
         }
@@ -239,6 +239,7 @@ const AuthController = {
                                 await models.ProductPickList.create({
                                     product_id: element.product_id,
                                     picklist_id: new_picklist_id,
+                                    quantity: element.quantity,
                                     is_active: 1,
                                     status: constants.STATUS.REMARKS.PLRC,
                                     created_at: helpers.currentTime(),

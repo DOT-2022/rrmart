@@ -10,6 +10,7 @@ router.post('/login', authController.login);
 router.post('/register', authController.register);
 
 router.get('/products/list/:category_id/slug/:slug', commonController.get_products_by_category);
+router.get('/products/list', commonController.get_all_products);
 
 
 module.exports = router;
