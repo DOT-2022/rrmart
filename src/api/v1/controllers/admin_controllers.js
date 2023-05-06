@@ -187,8 +187,9 @@ const AdminController = {
     },
     getAllProudcts: async (req, res) => {
         try {
-            console.log("file name",)
+            
             let allActiveProudct = await getExisitngActiveProducts();
+            
             if (allActiveProudct) {
                 return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: true,
@@ -205,7 +206,7 @@ const AdminController = {
             }
 
         } catch (error) {
-            return res.status(404).json({
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
                 message: error.message,
                 data: []
@@ -459,14 +460,14 @@ const AdminController = {
                     data: response_data
                 });
             } else {
-                return res.status(constants.STATUS_CODE.FAIL).json({
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: false,
                     message: `No active orders.`,
                     data: []
                 });
             }
         } catch (error) {
-            return res.status(constants.STATUS_CODE.FAIL).json({
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
                 message: error.message,
                 data: []
@@ -500,14 +501,14 @@ const AdminController = {
                         break;
                 }
             } else {
-                return res.status(constants.STATUS_CODE.FAIL).json({
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: false,
                     message: "Sorry, we are not able to find such order. Please try again.",
                     data: []
                 });
             }
         } catch (error) {
-            return res.status(constants.STATUS_CODE.FAIL).json({
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
                 message: error.message,
                 data: []
