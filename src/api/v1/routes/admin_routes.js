@@ -40,4 +40,7 @@ router.post('/products/update', [passport.authenticate('jwt', { session: false }
 // Routes for Orders
 router.get('/orders/active_orders', [passport.authenticate('jwt', { session: false })], adminController.getAllLatestOrders);
 router.get('/orders/active_orders/:order_id', [passport.authenticate('jwt', { session: false })], adminController.showParticularOrderDetails);
+
+// Routes for Store
+router.get('/store/all', [passport.authenticate('jwt', { session: false })], adminController.getStoreDetails);
 module.exports = router;

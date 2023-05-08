@@ -187,9 +187,9 @@ const AdminController = {
     },
     getAllProudcts: async (req, res) => {
         try {
-            
+
             let allActiveProudct = await getExisitngActiveProducts();
-            
+
             if (allActiveProudct) {
                 return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: true,
@@ -514,7 +514,94 @@ const AdminController = {
                 data: []
             });
         }
+    },
+    getStoreDetails: async (req, res) => {
+        try {
+            let storeDetails = {
+                category: {
+                    count: 0,
+                    list: []
+                },
+                product: {
+                    count: 0,
+                    list: []
+                },
+                new_orders: {
+                    count: 0,
+                    list: []
+                },
+                active_orders: {
+                    count: 0,
+                    list: []
+                },
+                rejected_orders: {
+                    count: 0,
+                    list: []
+                },
+                delivered_orders: {
+                    count: 0,
+                    list: []
+                },
+            };
+            let allActiveCategory = await getExisitngActivecategories();
+            let allActiveProducts = await getExisitngActiveProducts();
+            let allNewOrders = await getOrdersList('Received');
+            let allActiveOrders = await getOrdersList('Confirmed');
+            let allRejectedOrders = await getOrdersList('Rejected');
+            let allDeliveredOrders = await getOrdersList('Delivered');
+
+            if (allActiveCategory) {
+                storeDetails.category.count = allActiveCategory.length;
+                storeDetails.category.list = await transformImage(allActiveCategory, 'image');
+            }
+
+            if (allActiveProducts) {
+                storeDetails.product.count = allActiveProducts.length;
+                storeDetails.product.list = await transformImage(allActiveProducts, 'image1');
+            }
+
+            if (allNewOrders) {
+                storeDetails.new_orders.count = allNewOrders.length;
+                storeDetails.new_orders.list = allNewOrders;
+            }
+
+            if (allActiveOrders) {
+                storeDetails.active_orders.count = allActiveOrders.length;
+                storeDetails.active_orders.list = allActiveOrders;
+            }
+
+            if (allRejectedOrders) {
+                storeDetails.rejected_orders.count = allRejectedOrders.length;
+                storeDetails.rejected_orders.list = allRejectedOrders;
+            }
+
+            if (allActiveOrders) {
+                storeDetails.delivered_orders.count = allDeliveredOrders.length;
+                storeDetails.delivered_orders.list = allDeliveredOrders;
+            }
+
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: true,
+                message: "store details",
+                data: storeDetails
+            })
+
+        } catch (error) {
+            console.log(error);
+            return res.status(constants.STATUS_CODE.FAIL).json({
+                status: false,
+                message: error.message,
+                data: []
+            });
+        }
     }
+}
+
+let transformImage = async (items, fieldName) => {
+    if (fieldName === 'image1') items.map((x) => x.image1 = 'public/uploads/' + x.image1);;
+    if (fieldName === 'image') items.map((x) => x.image = 'public/uploads/' + x.image);;
+    console.log('items transforemd', items)
+    return items;
 }
 
 let getExisitngActivecategories = async () => {
@@ -564,6 +651,25 @@ let getExisitngParticularProduct = async (category_id, name) => {
 
 
     return activeProduct;
+}
+
+let getOrdersList = async (flag) => {
+
+    let orders = await models.Order.findAll({
+        where: {
+            status: flag,
+            is_active: 1
+        },
+        attributes: {
+            exclude: ['remarks', 'updated_at']
+        },
+        order: [
+            ['created_at', 'DESC']
+        ]
+    });
+
+
+    return orders;
 }
 
 let removeImage = async (flag, id) => {
