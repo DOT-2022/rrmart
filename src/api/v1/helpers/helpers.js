@@ -49,15 +49,15 @@ helpers = {
     },
 
     generateSixDigitOTP: () => {
-        return Math.floor(100000 + Math.random() * 999999);
+        return Math.floor(100000 + Math.random() * 900000);
     },
 
     generateAlphaNumericUID: (length) => {
         // random_alphabets = Math.random().toString(36).slice(2);
         // random_number = Math.floor(10000000 + Math.random() * 9999999);
-        
+
         var str = '';
-        var chars ='0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZ'.split(
+        var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZ'.split(
             '');
         var charsLen = chars.length;
         if (!length) {

@@ -668,6 +668,7 @@ let getOrdersList = async (flag) => {
         ]
     });
 
+    query = 'select o.id, o.order_name, o.'
 
     return orders;
 }
