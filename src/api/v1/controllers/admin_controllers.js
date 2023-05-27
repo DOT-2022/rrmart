@@ -377,48 +377,49 @@ const AdminController = {
         }
     },
     showParticularOrderDetails: async (req, res) => {
-        const order_id = req.params.order_id;
-
-        let response_data = {
-            order_id: order_id,
-            order_type: "",
-            order_status: "",
-            order_remarks: "",
-            ordered_by: {
-                name: "",
-                mobile: "",
-                address: "",
-                landmark: "",
-                city: "",
-                state: "",
-                country: "",
-                pincode: ""
-            },
-            delivery_add : {
-                name: "",
-                contact: "",
-                address: "",
-                landmark: "",
-                city: "",
-                state: "",
-                country: "",
-                pincode: ""
-            },
-            picklist: []
-        };
-
-        const oldestOrderQuery = "SELECT \
-                u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
-                ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
-                o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
-                FROM users u \
-                JOIN orders o ON o.user_id = u.id \
-                JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
-                WHERE o.status = 'Received' \
-                AND o.is_active = 1 \
-                AND o.id = ? \
-                ORDER BY o.created_at ASC";
         try {
+            const order_id = req.params.order_id;
+    
+            let response_data = {
+                order_id: order_id,
+                order_type: "",
+                order_status: "",
+                order_remarks: "",
+                ordered_by: {
+                    name: "",
+                    mobile: "",
+                    address: "",
+                    landmark: "",
+                    city: "",
+                    state: "",
+                    country: "",
+                    pincode: ""
+                },
+                delivery_add : {
+                    name: "",
+                    contact: "",
+                    address: "",
+                    landmark: "",
+                    city: "",
+                    state: "",
+                    country: "",
+                    pincode: ""
+                },
+                picklist: []
+            };
+    
+            const oldestOrderQuery = "SELECT \
+                    u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                    ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                    o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                    FROM users u \
+                    JOIN orders o ON o.user_id = u.id \
+                    JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                    WHERE o.status = 'Received' \
+                    AND o.is_active = 1 \
+                    AND o.id = ? \
+                    ORDER BY o.created_at ASC";
+                    
             const orders = await models.sequelize.query(
                 oldestOrderQuery,
                 {
