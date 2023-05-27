@@ -6,6 +6,8 @@ const AuthController = require('../controllers/auth_controllers');
 const CommonController = require('../controllers/common_controllers');
 require('../middlewares/authentication_middleware')(passport);
 
+router.get('/:user_id', [passport.authenticate('jwt', { session: false })], AuthController.getUserData);
+
 router.get('/orders/:user_id', CommonController.getListOfOrders);
 router.post('/orders/create', [passport.authenticate('jwt', { session: false })], AuthController.newOrder);
 

@@ -3,7 +3,8 @@ const models = require('../../../config/db_config');
 const helpers = require('../helpers/helpers');
 const { QueryTypes } = require('sequelize');
 const constants = require('../../../config/constants');
-var fs = require('fs');
+const fs = require('fs');
+const mime = require('mime');
 
 const AdminController = {
     createNewCategory: async (req, res) => {
@@ -393,14 +394,26 @@ const AdminController = {
                 country: "",
                 pincode: ""
             },
+            delivery_add : {
+                name: "",
+                contact: "",
+                address: "",
+                landmark: "",
+                city: "",
+                state: "",
+                country: "",
+                pincode: ""
+            },
             picklist: []
         };
 
         const oldestOrderQuery = "SELECT \
                 u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
                 o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
                 FROM users u \
                 JOIN orders o ON o.user_id = u.id \
+                JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
                 WHERE o.status = 'Received' \
                 AND o.is_active = 1 \
                 AND o.id = ? \
@@ -427,11 +440,19 @@ const AdminController = {
                 response_data.ordered_by.state = orders[0].state;
                 response_data.ordered_by.country = orders[0].country;
                 response_data.ordered_by.pincode = orders[0].pincode;
+                response_data.delivery_add.name = helpers.joinFirstAndLastName(orders[0].d_first_name, orders[0].d_last_name);
+                response_data.delivery_add.mobile = orders[0].d_mobile;
+                response_data.delivery_add.address = orders[0].d_address;
+                response_data.delivery_add.landmark = orders[0].d_landmark;
+                response_data.delivery_add.city = orders[0].d_city;
+                response_data.delivery_add.state = orders[0].d_state;
+                response_data.delivery_add.country = orders[0].d_country;
+                response_data.delivery_add.pincode = orders[0].d_pincode;
 
                 // Now get all the picklist items
 
                 const picklistQuery = "SELECT \
-                        p.name, p.slug, p.image1, p.image2, p.description, p.actual_price, p.sale_price, p.is_active prduct_is_active,\
+                        p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
                         c.name category \
                         FROM products p \
                         JOIN product_picklists pp ON p.id = pp.product_id \

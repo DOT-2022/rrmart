@@ -122,6 +122,7 @@ const AuthController = {
                     country: 'India',
                     pincode: pincode,
                     is_active: 1,
+                    is_default: 1,
                     created_at: helpers.currentTime(),
                     updated_at: helpers.currentTime()
                 }, {
@@ -178,6 +179,43 @@ const AuthController = {
             await transaction.rollback();
 
             return res.status(constants.STATUS_CODE.FAIL).json({
+                status: false,
+                message: err.message,
+                data: []
+            });
+        }
+    },
+    getUserData: async (req, res) => {
+
+        const { user_id } = await req.params;
+        console.log("User id is", user_id);
+        try {
+            let user = await models.User.findOne({
+                where: {
+                    id: user_id,
+                    is_active: 1
+                },
+            });
+
+            if (user) {
+
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "User Current Data!",
+                    data: user
+                });
+
+            } else {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: false,
+                    message: "User not found.",
+                    data: []
+                });
+            }
+
+        } catch (err) {
+
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
                 message: err.message,
                 data: []
@@ -610,7 +648,6 @@ const AuthController = {
             });
         }
     },
-
     addNewAddress: async (req, res) => {
         let { first_name, last_name, is_default, phone_no, address, landmark, city, state, pincode, user_id } = req.body;
 
