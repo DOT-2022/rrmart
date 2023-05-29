@@ -4,7 +4,6 @@ const helpers = require('../helpers/helpers');
 const { QueryTypes } = require('sequelize');
 const constants = require('../../../config/constants');
 const fs = require('fs');
-const mime = require('mime');
 
 const AdminController = {
     createNewCategory: async (req, res) => {
@@ -379,6 +378,8 @@ const AdminController = {
     showParticularOrderDetails: async (req, res) => {
         try {
             const order_id = req.params.order_id;
+
+            console.log("ORDER ID: " + order_id);
     
             let response_data = {
                 order_id: order_id,
@@ -419,7 +420,7 @@ const AdminController = {
                     AND o.is_active = 1 \
                     AND o.id = ? \
                     ORDER BY o.created_at ASC";
-                    
+
             const orders = await models.sequelize.query(
                 oldestOrderQuery,
                 {
