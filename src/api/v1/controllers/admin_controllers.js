@@ -378,6 +378,7 @@ const AdminController = {
     showParticularOrderDetails: async (req, res) => {
         try {
             const order_id = req.params.order_id;
+            const tabName = req.params.tab;
 
             console.log("ORDER ID: " + order_id);
     
@@ -408,18 +409,67 @@ const AdminController = {
                 },
                 picklist: []
             };
+
+            let oldestOrderQuery = "";
     
-            const oldestOrderQuery = "SELECT \
-                    u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
-                    ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
-                    o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
-                    FROM users u \
-                    JOIN orders o ON o.user_id = u.id \
-                    JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
-                    WHERE o.status = 'Received' \
-                    AND o.is_active = 1 \
-                    AND o.id = ? \
-                    ORDER BY o.created_at ASC";
+            switch (tabName) {
+                case "active":
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Confirmed' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                    break;
+
+                case "rejected":
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Rejected' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                    break;
+
+                case "delivered":
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Delivered' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                    break;
+
+                default:
+                    //new
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Received' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                    break;
+            }
 
             const orders = await models.sequelize.query(
                 oldestOrderQuery,
@@ -453,20 +503,72 @@ const AdminController = {
 
                 // Now get all the picklist items
 
-                const picklistQuery = "SELECT \
-                        p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
-                        c.name category \
-                        FROM products p \
-                        JOIN product_picklists pp ON p.id = pp.product_id \
-                        JOIN picklists pl ON pl.id = pp.picklist_id \
-                        JOIN orders o ON o.order_name = pl.order_name \
-                        JOIN categories c ON p.category_id = c.id \
-                        WHERE o.status = 'Received' \
-                        AND o.is_active = 1 \
-                        AND o.id = ? \
-                        ORDER BY o.created_at ASC";
+                let picklistQuery = "";
 
-                const picklist = await models.sequelize.query(
+                switch (tabName) {
+                    case "active":
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Confirmed' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                        break;
+    
+                    case "rejected":
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Rejected' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                        break;
+    
+                    case "delivered":
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Delivered' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                        break;
+    
+                    default:
+                        //new
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Received' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                        break;
+                }
+
+                let picklist = await models.sequelize.query(
                     picklistQuery,
                     {
                         replacements: [order_id],
@@ -510,6 +612,7 @@ const AdminController = {
             });
 
             if (orders) {
+                
                 switch (status) {
                     case 'rejected':
                         if (remarks != "") {
@@ -616,6 +719,91 @@ const AdminController = {
                 message: error.message,
                 data: []
             });
+        }
+    },
+    changeOrderStatus: async (req, res) => {
+        const {status, order_id} = req.body;
+        console.log("Request received", order_id, status);
+        try {
+            let count = await models.Order.count({
+                where: {
+                    id: order_id,
+                    is_active: 1
+                }
+            });
+
+            if(count > 0) {
+                const transaction = await models.sequelize.transaction();
+
+                switch (status) {
+                    case "Confirm":
+                        const result = await models.Order.update({
+                            status: constants.STATUS.CN,
+                            remarks: constants.STATUS.REMARKS.OCN,
+                            updated_at: helpers.currentTime()
+                        },{
+                            where: {
+                                id: order_id,
+                                is_active: 1
+                            }
+                        },{
+                            transaction: transaction
+                        });
+                        console.log(result);
+
+                        if(result) {
+
+                            const plResult = await models.PickList.update({
+                                status: constants.STATUS.CN,
+                                remarks: constants.STATUS.REMARKS.OCN,
+                                updated_at: helpers.currentTime()
+                            },{
+                                where: {
+                                    id: order_id,
+                                    is_active: 1
+                                }
+                            },{
+                                transaction: transaction
+                            });
+
+                            if(plResult) {
+
+                                await transaction.commit();
+
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: true,
+                                    message: "Order Confirmed. This order has been moved to Active Orders List. Thank you!",
+                                    data: []
+                                });
+                            } else {
+                                await transaction.rollback();
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: "Order Status not changed. Please try again!",
+                                    data: []
+                                });
+                            }
+                        } else {
+                            await transaction.rollback();
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Order Status not changed. Please try again!",
+                                data: []
+                            });
+                        }
+                
+                    default:
+                        break;
+                }
+            } else {
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: false,
+                    message: "Order not found. Please try again!",
+                    data: []
+                })
+            }
+        } catch (error) {
+            
         }
     }
 }

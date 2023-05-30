@@ -32,7 +32,7 @@ const constants = {
         DL: "Order Delivered",
         REMARKS: {
             OPR: "We are processing your order. We will confirm your order soon.",
-            OCN: "Your order has been confirmed. Sit tight, we will contact you soon for further instructions.",
+            OCN: "Your order has been confirmed. Sit tight!, we will contact you soon for further instructions.",
             ORJ: "Sorry! Your order has been rejected. Rejection is due to ",
             ORC: "Thank you for ordering! We have received your picklist.",
             OPL: "We are picking your items. We will let you know once we complete your picklist. Thank you.",
