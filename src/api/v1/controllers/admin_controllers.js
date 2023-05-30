@@ -380,8 +380,8 @@ const AdminController = {
             const order_id = req.params.order_id;
             const tabName = req.params.tab;
 
-            console.log("ORDER ID: " + order_id);
-    
+            console.log("ORDER ID: " + order_id, tabName);
+
             let response_data = {
                 order_id: order_id,
                 order_type: "",
@@ -397,7 +397,7 @@ const AdminController = {
                     country: "",
                     pincode: ""
                 },
-                delivery_add : {
+                delivery_add: {
                     name: "",
                     contact: "",
                     address: "",
@@ -411,7 +411,7 @@ const AdminController = {
             };
 
             let oldestOrderQuery = "";
-    
+
             switch (tabName) {
                 case "active":
                     oldestOrderQuery = "SELECT \
@@ -436,6 +436,34 @@ const AdminController = {
                             JOIN orders o ON o.user_id = u.id \
                             JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
                             WHERE o.status = 'Rejected' \
+                            AND o.is_active = 0 \
+                            AND o.id = ? \
+                            ORDER BY o.updated_at DESC";
+                    break;
+
+                case "picking":
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Picking Items' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.created_at ASC";
+                    break;
+
+                case "completed":
+                    oldestOrderQuery = "SELECT \
+                            u.first_name, u.last_name, u.mobile, u.address, u.landmark, u.city, u.state, u.country, u.pincode, \
+                            ua.first_name d_first_name, ua.last_name d_last_name, ua.contact d_mobile, ua.address d_address, ua.landmark d_landmark, ua.city d_city, ua.state d_state, ua.country d_country, ua.pincode d_pincode, \
+                            o.id order_id, o.order_name, o.order_type, o.status, o.remarks, o.created_at \
+                            FROM users u \
+                            JOIN orders o ON o.user_id = u.id \
+                            JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
+                            WHERE o.status = 'Picking Completed' \
                             AND o.is_active = 1 \
                             AND o.id = ? \
                             ORDER BY o.created_at ASC";
@@ -449,8 +477,8 @@ const AdminController = {
                             FROM users u \
                             JOIN orders o ON o.user_id = u.id \
                             JOIN user_addresses ua ON u.id = ua.user_id AND ua.is_active = 1\
-                            WHERE o.status = 'Delivered' \
-                            AND o.is_active = 1 \
+                            WHERE o.status = 'Order Delivered' \
+                            AND o.is_active = 0 \
                             AND o.id = ? \
                             ORDER BY o.created_at ASC";
                     break;
@@ -518,9 +546,9 @@ const AdminController = {
                             WHERE o.status = 'Confirmed' \
                             AND o.is_active = 1 \
                             AND o.id = ? \
-                            ORDER BY o.created_at ASC";
+                            ORDER BY o.updated_at ASC";
                         break;
-    
+
                     case "rejected":
                         picklistQuery = "SELECT \
                             p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
@@ -531,11 +559,41 @@ const AdminController = {
                             JOIN orders o ON o.order_name = pl.order_name \
                             JOIN categories c ON p.category_id = c.id \
                             WHERE o.status = 'Rejected' \
+                            AND o.is_active = 0 \
+                            AND o.id = ? \
+                            ORDER BY o.updated_at ASC";
+                        break;
+
+                    case "picking":
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Picking Items' \
                             AND o.is_active = 1 \
                             AND o.id = ? \
-                            ORDER BY o.created_at ASC";
+                            ORDER BY o.updated_at ASC";
                         break;
-    
+
+                    case "completed":
+                        picklistQuery = "SELECT \
+                            p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
+                            c.name category \
+                            FROM products p \
+                            JOIN product_picklists pp ON p.id = pp.product_id \
+                            JOIN picklists pl ON pl.id = pp.picklist_id \
+                            JOIN orders o ON o.order_name = pl.order_name \
+                            JOIN categories c ON p.category_id = c.id \
+                            WHERE o.status = 'Picking Completed' \
+                            AND o.is_active = 1 \
+                            AND o.id = ? \
+                            ORDER BY o.updated_at ASC";
+                        break;
+
                     case "delivered":
                         picklistQuery = "SELECT \
                             p.name, p.slug, p.image1, p.description, p.sale_price, pp.quantity,\
@@ -545,12 +603,12 @@ const AdminController = {
                             JOIN picklists pl ON pl.id = pp.picklist_id \
                             JOIN orders o ON o.order_name = pl.order_name \
                             JOIN categories c ON p.category_id = c.id \
-                            WHERE o.status = 'Delivered' \
-                            AND o.is_active = 1 \
+                            WHERE o.status = 'Order Delivered' \
+                            AND o.is_active = 0 \
                             AND o.id = ? \
-                            ORDER BY o.created_at ASC";
+                            ORDER BY o.updated_at ASC";
                         break;
-    
+
                     default:
                         //new
                         picklistQuery = "SELECT \
@@ -612,7 +670,7 @@ const AdminController = {
             });
 
             if (orders) {
-                
+
                 switch (status) {
                     case 'rejected':
                         if (remarks != "") {
@@ -660,6 +718,14 @@ const AdminController = {
                     count: 0,
                     list: []
                 },
+                picking_orders: {
+                    count: 0,
+                    list: []
+                },
+                completed_orders: {
+                    count: 0,
+                    list: []
+                },
                 rejected_orders: {
                     count: 0,
                     list: []
@@ -673,8 +739,10 @@ const AdminController = {
             let allActiveProducts = await getExisitngActiveProducts();
             let allNewOrders = await getOrdersList('Received');
             let allActiveOrders = await getOrdersList('Confirmed');
+            let allPickingOrders = await getOrdersList('Picking Items');
+            let allCompletedOrders = await getOrdersList('Picking Completed');
             let allRejectedOrders = await getOrdersList('Rejected');
-            let allDeliveredOrders = await getOrdersList('Delivered');
+            let allDeliveredOrders = await getOrdersList('Order Delivered');
 
             if (allActiveCategory) {
                 storeDetails.category.count = allActiveCategory.length;
@@ -696,12 +764,22 @@ const AdminController = {
                 storeDetails.active_orders.list = allActiveOrders;
             }
 
+            if (allPickingOrders) {
+                storeDetails.picking_orders.count = allPickingOrders.length;
+                storeDetails.picking_orders.list = allPickingOrders;
+            }
+
+            if (allCompletedOrders) {
+                storeDetails.completed_orders.count = allCompletedOrders.length;
+                storeDetails.completed_orders.list = allCompletedOrders;
+            }
+
             if (allRejectedOrders) {
                 storeDetails.rejected_orders.count = allRejectedOrders.length;
                 storeDetails.rejected_orders.list = allRejectedOrders;
             }
 
-            if (allActiveOrders) {
+            if (allDeliveredOrders) {
                 storeDetails.delivered_orders.count = allDeliveredOrders.length;
                 storeDetails.delivered_orders.list = allDeliveredOrders;
             }
@@ -722,7 +800,7 @@ const AdminController = {
         }
     },
     changeOrderStatus: async (req, res) => {
-        const {status, order_id} = req.body;
+        const { status, order_id, remarks } = req.body;
         console.log("Request received", order_id, status);
         try {
             let count = await models.Order.count({
@@ -732,7 +810,7 @@ const AdminController = {
                 }
             });
 
-            if(count > 0) {
+            if (count > 0) {
                 const transaction = await models.sequelize.transaction();
 
                 switch (status) {
@@ -741,40 +819,56 @@ const AdminController = {
                             status: constants.STATUS.CN,
                             remarks: constants.STATUS.REMARKS.OCN,
                             updated_at: helpers.currentTime()
-                        },{
+                        }, {
                             where: {
                                 id: order_id,
                                 is_active: 1
                             }
-                        },{
+                        }, {
                             transaction: transaction
                         });
                         console.log(result);
 
-                        if(result) {
+                        if (result) {
 
-                            const plResult = await models.PickList.update({
-                                status: constants.STATUS.CN,
-                                remarks: constants.STATUS.REMARKS.OCN,
-                                updated_at: helpers.currentTime()
-                            },{
+                            const order = await models.Order.findOne({
                                 where: {
                                     id: order_id,
                                     is_active: 1
                                 }
-                            },{
-                                transaction: transaction
                             });
 
-                            if(plResult) {
-
-                                await transaction.commit();
-
-                                return res.status(constants.STATUS_CODE.SUCCESS).json({
-                                    status: true,
-                                    message: "Order Confirmed. This order has been moved to Active Orders List. Thank you!",
-                                    data: []
+                            if (order) {
+                                const plResult = await models.PickList.update({
+                                    status: constants.STATUS.CN,
+                                    remarks: constants.STATUS.REMARKS.OCN,
+                                    updated_at: helpers.currentTime()
+                                }, {
+                                    where: {
+                                        order_name: order.order_name,
+                                        is_active: 1
+                                    }
+                                }, {
+                                    transaction: transaction
                                 });
+
+                                if (plResult) {
+
+                                    await transaction.commit();
+
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: true,
+                                        message: "Order Confirmed. This order has been moved to Active Orders List. Thank you!",
+                                        data: []
+                                    });
+                                } else {
+                                    await transaction.rollback();
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: false,
+                                        message: "Order Status not changed. Please try again!",
+                                        data: []
+                                    });
+                                }
                             } else {
                                 await transaction.rollback();
                                 return res.status(constants.STATUS_CODE.SUCCESS).json({
@@ -791,8 +885,302 @@ const AdminController = {
                                 data: []
                             });
                         }
-                
+                    case "Rejected":
+                        const updatedOrder = await models.Order.update({
+                            status: constants.STATUS.RJ,
+                            remarks: constants.STATUS.REMARKS.ORJ + " " + remarks,
+                            is_active: 0,
+                            updated_at: helpers.currentTime()
+                        }, {
+                            where: {
+                                id: order_id,
+                                is_active: 1
+                            }
+                        }, {
+                            transaction: transaction
+                        });
+                        console.log(updatedOrder);
+
+                        if (updatedOrder) {
+                            console.log("PL rejection", updatedOrder, order_id, remarks);
+                            const order = await models.Order.findOne({
+                                where: {
+                                    id: order_id
+                                }
+                            });
+
+                            if (order) {
+                                const plResp = await models.PickList.update({
+                                    status: constants.STATUS.RJ,
+                                    remarks: constants.STATUS.REMARKS.ORJ + " " + remarks,
+                                    is_active: 0,
+                                    updated_at: helpers.currentTime()
+                                }, {
+                                    where: {
+                                        order_name: order.order_name,
+                                        is_active: 1
+                                    }
+                                }, {
+                                    transaction: transaction
+                                });
+
+                                if (plResp) {
+
+                                    await transaction.commit();
+
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: true,
+                                        message: "Order Rejected. This order has been moved to Rejected Orders List. Thank you!",
+                                        data: []
+                                    });
+                                } else {
+                                    await transaction.rollback();
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: false,
+                                        message: "Order Status not changed. Please try again!",
+                                        data: []
+                                    });
+                                }
+                            } else {
+                                await transaction.rollback();
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: "Order Status not changed. Please try again!",
+                                    data: []
+                                });
+                            }
+                        } else {
+                            await transaction.rollback();
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Order Status not changed. Please try again!",
+                                data: []
+                            });
+                        }
+                        break;
+                    case "Process":
+                        const order = await models.Order.update({
+                            status: constants.STATUS.PL,
+                            remarks: constants.STATUS.REMARKS.OPL,
+                            updated_at: helpers.currentTime()
+                        }, {
+                            where: {
+                                id: order_id,
+                                is_active: 1
+                            }
+                        }, {
+                            transaction: transaction
+                        });
+                        console.log(order);
+
+                        if (order) {
+                            
+                            const existingOrder = await models.Order.findOne({
+                                where: {
+                                    id: order_id,
+                                    is_active: 1
+                                }
+                            });
+
+                            if (existingOrder) {
+                                const plResp = await models.PickList.update({
+                                    status: constants.STATUS.PL,
+                                    remarks: constants.STATUS.REMARKS.OPL,
+                                    updated_at: helpers.currentTime()
+                                }, {
+                                    where: {
+                                        order_name: existingOrder.order_name,
+                                        is_active: 1
+                                    }
+                                }, {
+                                    transaction: transaction
+                                });
+
+                                if (plResp) {
+
+                                    await transaction.commit();
+
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: true,
+                                        message: "Order Status Updated to Picking.",
+                                        data: []
+                                    });
+                                } else {
+                                    await transaction.rollback();
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: false,
+                                        message: "Order Status not changed. Please try again!",
+                                        data: []
+                                    });
+                                }
+                            } else {
+                                await transaction.rollback();
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: "Order Status not changed. Please try again!",
+                                    data: []
+                                });
+                            }
+                        } else {
+                            await transaction.rollback();
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Order Status not changed. Please try again!",
+                                data: []
+                            });
+                        }
+                        break;
+
+                    case "Completed":
+                        const completedOrder = await models.Order.update({
+                            status: constants.STATUS.PC,
+                            remarks: constants.STATUS.REMARKS.OPC,
+                            updated_at: helpers.currentTime()
+                        }, {
+                            where: {
+                                id: order_id,
+                                is_active: 1
+                            }
+                        }, {
+                            transaction: transaction
+                        });
+                        console.log(completedOrder);
+
+                        if (completedOrder) {
+                            
+                            const existingOrder = await models.Order.findOne({
+                                where: {
+                                    id: order_id,
+                                    is_active: 1
+                                }
+                            });
+
+                            if (existingOrder) {
+                                const plResp = await models.PickList.update({
+                                    status: constants.STATUS.PC,
+                                    remarks: constants.STATUS.REMARKS.OPC,
+                                    updated_at: helpers.currentTime()
+                                }, {
+                                    where: {
+                                        order_name: existingOrder.order_name,
+                                        is_active: 1
+                                    }
+                                }, {
+                                    transaction: transaction
+                                });
+
+                                if (plResp) {
+
+                                    await transaction.commit();
+
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: true,
+                                        message: "Order Status Updated to Completed.",
+                                        data: []
+                                    });
+                                } else {
+                                    await transaction.rollback();
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: false,
+                                        message: "Order Status not changed. Please try again!",
+                                        data: []
+                                    });
+                                }
+                            } else {
+                                await transaction.rollback();
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: "Order Status not changed. Please try again!",
+                                    data: []
+                                });
+                            }
+                        } else {
+                            await transaction.rollback();
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Order Status not changed. Please try again!",
+                                data: []
+                            });
+                        }
+                        break;
+
+                    case "Deliver":
+                        const deliverOrder = await models.Order.update({
+                            status: constants.STATUS.DL,
+                            remarks: constants.STATUS.REMARKS.ODL,
+                            is_active: 0,
+                            updated_at: helpers.currentTime()
+                        }, {
+                            where: {
+                                id: order_id,
+                                is_active: 1
+                            }
+                        }, {
+                            transaction: transaction
+                        });
+                        console.log("Deliver order", deliverOrder);
+
+                        if (deliverOrder) {
+                            console.log("inside delivery order")
+                            const existingOrder = await models.Order.findOne({
+                                where: {
+                                    id: order_id,
+                                    is_active: 0
+                                }
+                            });
+                            console.log("existi", existingOrder)
+                            if (existingOrder) {
+                                const plResp = await models.PickList.update({
+                                    status: constants.STATUS.DL,
+                                    remarks: constants.STATUS.REMARKS.ODL,
+                                    is_active: 0,
+                                    updated_at: helpers.currentTime()
+                                }, {
+                                    where: {
+                                        order_name: existingOrder.order_name,
+                                        is_active: 1
+                                    }
+                                }, {
+                                    transaction: transaction
+                                });
+
+                                if (plResp) {
+
+                                    await transaction.commit();
+
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: true,
+                                        message: "Order Status Updated to Delivered.",
+                                        data: []
+                                    });
+                                } else {
+                                    await transaction.rollback();
+                                    return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                        status: false,
+                                        message: "Order Status not changed. Please try again!",
+                                        data: []
+                                    });
+                                }
+                            } else {
+                                await transaction.rollback();
+                                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                    status: false,
+                                    message: "Order Status not changed. Please try again!",
+                                    data: []
+                                });
+                            }
+                        } else {
+                            await transaction.rollback();
+                            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                                status: false,
+                                message: "Order Status not changed. Please try again!",
+                                data: []
+                            });
+                        }
+                        break;
+
                     default:
+
                         break;
                 }
             } else {
@@ -803,7 +1191,7 @@ const AdminController = {
                 })
             }
         } catch (error) {
-            
+
         }
     }
 }
@@ -866,22 +1254,39 @@ let getExisitngParticularProduct = async (category_id, name) => {
 
 let getOrdersList = async (flag) => {
 
-    let orders = await models.Order.findAll({
-        where: {
-            status: flag,
-            is_active: 1
-        },
-        attributes: {
-            exclude: ['remarks', 'updated_at']
-        },
-        order: [
-            ['created_at', 'DESC']
-        ]
-    });
+    if (flag != "Rejected" && flag != "Order Delivered") {
 
-    query = 'select o.id, o.order_name, o.'
+        let orders = await models.Order.findAll({
+            where: {
+                status: flag,
+                is_active: 1
+            },
+            attributes: {
+                exclude: ['remarks', 'updated_at']
+            },
+            order: [
+                ['created_at', 'DESC']
+            ]
+        });
 
-    return orders;
+        return orders;
+    } else {
+        let orders = await models.Order.findAll({
+            where: {
+                status: flag,
+                is_active: 0
+            },
+            attributes: {
+                exclude: ['remarks', 'updated_at']
+            },
+            order: [
+                ['created_at', 'DESC']
+            ]
+        });
+
+        return orders;
+    }
+
 }
 
 let removeImage = async (flag, id) => {

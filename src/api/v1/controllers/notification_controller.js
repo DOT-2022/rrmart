@@ -57,7 +57,7 @@ const NotificationController = {
         //     }
         //     return responseData;
         // }
-    },
+    }
 }
 
 module.exports = NotificationController;

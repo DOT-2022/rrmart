@@ -19,7 +19,44 @@ const constants = {
         FCM_BASE_URL: 'https://fcm.googleapis.com/fcm/send',
         TITLE: "RR MART - OTP",
         MESSAGE_I: 'Never share your OTP with others. You are receiving this message to verify your account.',
-        MESSAGE_II : 'Your verification OTP is'
+        MESSAGE_II : 'Your verification OTP is',
+        STATUS_NOTIFICATION: {
+            NEW_ORDER: {
+                TITLE: 'New order',
+                MESSAGE_I: "Hi, You have received a new order from ",
+                MESSAGE_II: "Please check your orders list."
+            },
+            ORDER_ACCEPTED: {
+                TITLE: 'Picking Started',
+                MESSAGE_I: "Hi, ",
+                MESSAGE_II: "We have started picking your items from your order list. We are happy to help you. Thank you!"
+            },
+            ORDER_REJECTED: {
+                TITLE: 'Order Rejected',
+                MESSAGE_I: "Hi, ",
+                MESSAGE_II: "We are very sorry to inform you that your order has been rejected. Please check the Order status for the reason of rejection. We are sorry for any inconvenience caused. Thank you!"
+            },
+            ORDER_PICKING: {
+                TITLE: 'New order',
+                MESSAGE_I: "Hi, You have received a new order from ",
+                MESSAGE_II: "Please check your orders list."
+            },
+            PICKING_COMPLETED: {
+                TITLE: 'Picking completed',
+                MESSAGE_I: "Hi, ",
+                MESSAGE_II: "We have completed the picking of the items from your order list. We will contact you soon for further updates. Thank you!"
+            },
+            OUT_FOR_DELIVERY: {
+                TITLE: 'Out for Delivery',
+                MESSAGE_I: "Hi, ",
+                MESSAGE_II: "your order is out for delivery. We will contact you soon for any assistances required. Thank you!"
+            },
+            ORDER_DELIVERED: {
+                TITLE: 'Order Delivered',
+                MESSAGE_I: "Hi, ",
+                MESSAGE_II: "your order is delivered successfully! Thank you for using VSSV Mart. We are happy to serve you. Thank You!"
+            }
+        },
     },
     STATUS: {
         PR: "Processing",

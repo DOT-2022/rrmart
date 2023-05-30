@@ -4,6 +4,7 @@ const models = require('../../../config/db_config');
 const helpers = require('../helpers/helpers')
 const constants = require('../../../config/constants');
 const jwt = require('jsonwebtoken');
+const notification = require('./notification_controller');
 const { Sequelize } = require('sequelize');
 
 const AuthController = {
@@ -308,6 +309,20 @@ const AuthController = {
                         }
 
                         await transaction.commit();
+
+                        let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.NEW_ORDER.TITLE;
+                        let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.NEW_ORDER.MESSAGE_I} ${helpers.titleCase(user.first_name)} ${helpers.titleCase(user.last_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.NEW_ORDER.MESSAGE_II}`;
+                        console.log(notification_title, notification_body);
+
+                        const admin = await models.User.findOne({
+                            where: {
+                                role: 'Admin'
+                            }
+                        })
+
+                        if (admin) {
+                            await notification.send_notification(admin.device_id, notification_title, notification_body);
+                        }
 
                         return res.status(constants.STATUS_CODE.SUCCESS).json({
                             status: true,
