@@ -2,6 +2,7 @@
 const models = require('../../../config/db_config');
 const helpers = require('../helpers/helpers');
 const { QueryTypes } = require('sequelize');
+const notification = require('./notification_controller');
 const constants = require('../../../config/constants');
 const fs = require('fs');
 
@@ -657,48 +658,6 @@ const AdminController = {
             });
         }
     },
-    updateOrderStatus: async (req, res) => {
-        const { order_id, status, remarks } = req.params;
-
-        try {
-            // Step 1: Find the order with order id
-            const orders = await models.Order.findOne({
-                where: {
-                    id: order_id,
-                    is_active: 1
-                }
-            });
-
-            if (orders) {
-
-                switch (status) {
-                    case 'rejected':
-                        if (remarks != "") {
-                            await models.Order.update({
-                                status: constants.STATUS.RJ,
-                                re
-                            });
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            } else {
-                return res.status(constants.STATUS_CODE.SUCCESS).json({
-                    status: false,
-                    message: "Sorry, we are not able to find such order. Please try again.",
-                    data: []
-                });
-            }
-        } catch (error) {
-            return res.status(constants.STATUS_CODE.SUCCESS).json({
-                status: false,
-                message: error.message,
-                data: []
-            });
-        }
-    },
     getStoreDetails: async (req, res) => {
         try {
             let storeDetails = {
@@ -856,6 +815,14 @@ const AdminController = {
 
                                     await transaction.commit();
 
+                                    const customer =  await getUser(order_id);
+
+                                    let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.TITLE;
+                                    let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_II}`;
+                                    console.log(notification_title, notification_body);
+
+                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+                                    
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Confirmed. This order has been moved to Active Orders List. Thank you!",
@@ -885,6 +852,7 @@ const AdminController = {
                                 data: []
                             });
                         }
+                        
                     case "Rejected":
                         const updatedOrder = await models.Order.update({
                             status: constants.STATUS.RJ,
@@ -928,6 +896,14 @@ const AdminController = {
 
                                     await transaction.commit();
 
+                                    const customer =  await getUser(order_id);
+
+                                    let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.TITLE;
+                                    let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_II}`;
+                                    console.log(notification_title, notification_body);
+
+                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Rejected. This order has been moved to Rejected Orders List. Thank you!",
@@ -957,7 +933,7 @@ const AdminController = {
                                 data: []
                             });
                         }
-                        break;
+
                     case "Process":
                         const order = await models.Order.update({
                             status: constants.STATUS.PL,
@@ -1000,6 +976,14 @@ const AdminController = {
 
                                     await transaction.commit();
 
+                                    const customer =  await getUser(order_id);
+
+                                    let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.TITLE;
+                                    let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_II}`;
+                                    console.log(notification_title, notification_body);
+
+                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Status Updated to Picking.",
@@ -1029,7 +1013,6 @@ const AdminController = {
                                 data: []
                             });
                         }
-                        break;
 
                     case "Completed":
                         const completedOrder = await models.Order.update({
@@ -1073,6 +1056,13 @@ const AdminController = {
 
                                     await transaction.commit();
 
+                                    const customer =  await getUser(order_id);
+
+                                    let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.TITLE;
+                                    let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_II}`;
+
+                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Status Updated to Completed.",
@@ -1102,7 +1092,6 @@ const AdminController = {
                                 data: []
                             });
                         }
-                        break;
 
                     case "Deliver":
                         const deliverOrder = await models.Order.update({
@@ -1148,6 +1137,15 @@ const AdminController = {
 
                                     await transaction.commit();
 
+                                    await transaction.commit();
+
+                                    const customer =  await getUser(order_id);
+
+                                    let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.TITLE;
+                                    let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.MESSAGE_II}`;
+
+                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Status Updated to Delivered.",
@@ -1177,7 +1175,6 @@ const AdminController = {
                                 data: []
                             });
                         }
-                        break;
 
                     default:
 
@@ -1301,5 +1298,18 @@ let removeImage = async (flag, id) => {
     fs.unlinkSync(sourceUrls);
 }
 
+let getUser = async (order_id) => {
+
+    const userQuery = `SELECT u.first_name, u.last_name, u.device_id, o.order_name FROM users u JOIN orders o ON u.id = o.user_id WHERE o.id = ? AND u.is_active = 1`
+    const users = await models.sequelize.query(
+        userQuery,
+        {
+            replacements: [order_id],
+            type: QueryTypes.SELECT
+        });
+    console.log("User: ", users);
+
+    return users;
+}
 
 module.exports = AdminController;
