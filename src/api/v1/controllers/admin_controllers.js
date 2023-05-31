@@ -821,7 +821,7 @@ const AdminController = {
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_II}`;
                                     console.log(notification_title, notification_body);
 
-                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+                                    notification.send_notification(customer.device_id, notification_title, notification_body);
                                     
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
@@ -852,7 +852,7 @@ const AdminController = {
                                 data: []
                             });
                         }
-                        
+
                     case "Rejected":
                         const updatedOrder = await models.Order.update({
                             status: constants.STATUS.RJ,
@@ -902,7 +902,7 @@ const AdminController = {
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_II}`;
                                     console.log(notification_title, notification_body);
 
-                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+                                    notification.send_notification(customer.device_id, notification_title, notification_body);
 
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
@@ -982,7 +982,7 @@ const AdminController = {
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_II}`;
                                     console.log(notification_title, notification_body);
 
-                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+                                    notification.send_notification(customer.device_id, notification_title, notification_body);
 
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
@@ -1061,7 +1061,7 @@ const AdminController = {
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_I} ${helpers.titleCase(customer.first_name)} ${helpers.titleCase(customer.last_name)}. Order Ref #. ${customer.order_name}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_II}`;
 
-                                    notification.send_notification(customer.deviceid, notification_title, notification_body);
+                                    notification.send_notification(customer.device_id, notification_title, notification_body);
 
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
