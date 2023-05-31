@@ -1307,7 +1307,7 @@ let getUser = async (order_id) => {
             replacements: [order_id],
             type: QueryTypes.SELECT
         });
-    console.log("User: ", users);
+    console.log("User: ", users[0]);
 
     return users;
 }
