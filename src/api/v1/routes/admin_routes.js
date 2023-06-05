@@ -31,7 +31,7 @@ let upload = multer({ storage: fileStorage });
 router.post('/categories/create', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.createNewCategory);
 router.get('/categories/list', [passport.authenticate('jwt', { session: false })], adminController.getAllCategories);
 router.post('/categories/update', [passport.authenticate('jwt', { session: false })], adminController.updateCategory);
-router.post('/categories/update/image', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateCategory);
+router.post('/categories/update/image', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateCategoryImage);
 
 // Routes for Products
 router.post('/products/create', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.createNewProduct);
