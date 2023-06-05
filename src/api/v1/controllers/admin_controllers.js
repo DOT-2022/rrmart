@@ -1426,14 +1426,14 @@ let removeImage = async (flag, id, model) => {
     console.log("Looking for", flag, id);
     let sourceUrls = "";
     if (flag === "remove_new_file") {
-        sourceUrls = `../../../../public/uploads/${global.fileUploadeWithName}`;
+        sourceUrls = `./public/uploads/${global.fileUploadeWithName}`;
     } else {
         if (model === "products") {
             activeProduct = await models.Product.findByPk(id);
-            sourceUrls = `../../../../public/uploads/${activeProduct.image1}`;
+            sourceUrls = `./public/uploads/${activeProduct.image1}`;
         } else if (model === "category") {
-            activeProduct = await models.Product.findByPk(id);
-            sourceUrls = `../../../../public/uploads/${activeProduct.image}`;
+            activeCategory = await models.Category.findByPk(id);
+            sourceUrls = `./public/uploads/${activeCategory.image}`;
         }
     }
 
