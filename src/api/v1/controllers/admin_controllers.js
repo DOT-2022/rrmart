@@ -321,7 +321,6 @@ const AdminController = {
 
             if (existingProduct) {
                 console.log("product", existingProduct);
-                console.log("category_id", category_id, typeof (category_id), 'exusting category_id', existingProduct.category_id, typeof (existingProduct.category_id));
                 // After Updating the image name in the db, we need to delete the old
                 // image from the storage.
                 await removeImage('remove_old_file', id, "products");
