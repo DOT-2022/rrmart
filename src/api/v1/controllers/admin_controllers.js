@@ -7,6 +7,54 @@ const constants = require('../../../config/constants');
 const fs = require('fs');
 
 const AdminController = {
+    getUsersDetails: async (req, res) => {
+        try {
+
+            let applicationUser = {
+                allUsers: [],
+                usersByOrder: []
+            }
+
+            users = await models.User.findAll({
+                where: {
+                    role: 'User',
+                    is_active: 1
+                },
+            });
+
+            new_order_query = `SELECT u.first_name, u.last_name, u.mobile, JSON_ARRAYAGG(o.order_name) as orders
+                                FROM users u JOIN
+                                    orders o
+                                    ON u.id = o.user_id
+                                WHERE o.is_active = 1
+                                AND u.role = 'User'
+                                AND o.status = 'Received'
+                                GROUP BY u.id`;
+
+
+            const newOrders = await models.sequelize.query(
+                new_order_query,
+                {
+                    type: QueryTypes.SELECT
+                });
+
+            applicationUser.allUsers = users;
+            applicationUser.usersByOrder = newOrders
+
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: true,
+                message: "List of users",
+                data: applicationUser
+            });
+
+        } catch (error) {
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: false,
+                message: error.message,
+                data: []
+            });
+        }
+    },
     createNewCategory: async (req, res) => {
         try {
             const { name, slug } = req.body;
@@ -86,7 +134,8 @@ const AdminController = {
     },
     updateCategory: async (req, res) => {
         const { id, name, slug, is_active } = req.body;
-        const image = req.file;
+
+        console.log("Request Received", id, name, slug, is_active);
 
         try {
             let existingCategory = await models.Category.findByPk(id);
@@ -96,7 +145,6 @@ const AdminController = {
                 let updateResp = await models.Category.update({
                     name: helpers.titleCase(name),
                     slug: helpers.slug(slug),
-                    image: image.filename,
                     is_active: is_active,
                     updated_at: helpers.currentTime(),
                 }, {
@@ -126,6 +174,53 @@ const AdminController = {
             return res.status(404).json({
                 status: false,
                 message: `Couldn't find active category`,
+                data: []
+            });
+        }
+
+    },
+    updateCategoryImage: async (req, res) => {
+        const { id } = req.body;
+        const image = req.file;
+
+        try {
+            let existingCategory = await models.Category.findByPk(id);
+
+            if (existingCategory) {
+
+                await removeImage('remove_old_file', id, "category");
+
+                let updateResp = await models.Category.update({
+                    image: image.filename,
+                    updated_at: helpers.currentTime(),
+                }, {
+                    where: {
+                        id: id
+                    }
+                });
+
+                console.log("updated data", updateResp);
+
+                let allActiveCategory = await getExisitngActivecategories();
+
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "Image Updated Successfully",
+                    data: allActiveCategory
+                });
+
+            } else {
+                await removeImage('remove_new_file', id, "");
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: false,
+                    message: "Update failed. No such category exists.",
+                    data: []
+                });
+            }
+        } catch (error) {
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: false,
+                message: error.message,
                 data: []
             });
         }
@@ -215,9 +310,10 @@ const AdminController = {
         }
 
     },
-    updateProduct: async (req, res) => {
-        const { id, name, slug, category_id, description, actual_price, sale_price, is_active } = req.body;
+    updateProductImage: async (req, res) => {
+        const { id } = req.body;
         const image = req.file;
+
         console.log("filename", global.fileUploadeWithName);
 
         try {
@@ -225,18 +321,72 @@ const AdminController = {
 
             if (existingProduct) {
                 console.log("product", existingProduct);
+                console.log("category_id", category_id, typeof (category_id), 'exusting category_id', existingProduct.category_id, typeof (existingProduct.category_id));
+                // After Updating the image name in the db, we need to delete the old
+                // image from the storage.
+                await removeImage('remove_old_file', id, "products");
+
+                // Updating the product details without changing the category
+                let updateResp = await models.Product.update({
+                    image1: image.filename,
+                    updated_at: helpers.currentTime(),
+                }, {
+                    where: {
+                        id: id
+                    }
+                });
+
+
+                console.log("updated data", updateResp);
+
+                let allActiveProducts = await getExisitngActiveProducts();
+
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: true,
+                    message: "Product image updated successfully!",
+                    data: allActiveProducts
+                });
+
+            } else {
+                // After Updating the image name in the db, we need to delete the old
+                // image from the storage.
+                await removeImage('remove_new_file', 0, "");
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
+                    status: false,
+                    message: "Update failed. No such product exists.",
+                    data: []
+                });
+            }
+        } catch (error) {
+            // After Updating the image name in the db, we need to delete the old
+            // image from the storage.
+            console.log(error.message);
+            await removeImage('remove_new_file', 0, "");
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
+                status: false,
+                message: error.message,
+                data: []
+            });
+        }
+
+    },
+    updateProduct: async (req, res) => {
+        const { id, name, slug, category_id, description, actual_price, sale_price, is_active } = req.body;
+
+        console.log('Update Product', id, name, slug, category_id, description, actual_price, sale_price, is_active);
+        try {
+            let existingProduct = await models.Product.findByPk(id);
+
+            if (existingProduct) {
+                console.log("product", existingProduct);
                 if (existingProduct.category_id == category_id) {
                     console.log("category_id", category_id, typeof (category_id), 'exusting category_id', existingProduct.category_id, typeof (existingProduct.category_id));
-                    // After Updating the image name in the db, we need to delete the old
-                    // image from the storage.
-                    await removeImage('remove_old_file', id);
 
                     // Updating the product details without changing the category
                     let updateResp = await models.Product.update({
                         name: helpers.titleCase(name),
                         slug: helpers.slug(slug),
                         category_id: category_id,
-                        image1: image.filename,
                         description: description,
                         actual_price: actual_price,
                         sale_price: sale_price,
@@ -265,15 +415,10 @@ const AdminController = {
                     console.log("Duplicate count:", duplicateCount);
                     if (duplicateCount.count == 0) {
 
-                        // After Updating the image name in the db, we need to delete the old
-                        // image from the storage.
-                        await removeImage('remove_old_file', id);
-
                         let updateResp = await models.Product.update({
                             name: helpers.titleCase(name),
                             slug: helpers.slug(slug),
                             category_id: category_id,
-                            image1: image.filename,
                             description: description,
                             actual_price: actual_price,
                             sale_price: sale_price,
@@ -296,9 +441,6 @@ const AdminController = {
                             data: allActiveProducts
                         });
                     } else {
-                        // After Updating the image name in the db, we need to delete the old
-                        // image from the storage.
-                        await removeImage('remove_new_file', 0);
                         return res.status(constants.STATUS_CODE.FAIL).json({
                             status: false,
                             message: "Product under this category already exists.",
@@ -308,10 +450,7 @@ const AdminController = {
                 }
 
             } else {
-                // After Updating the image name in the db, we need to delete the old
-                // image from the storage.
-                await removeImage('remove_new_file', 0);
-                return res.status(constants.STATUS_CODE.FAIL).json({
+                return res.status(constants.STATUS_CODE.SUCCESS).json({
                     status: false,
                     message: "Update failed. No such product exists.",
                     data: []
@@ -321,10 +460,9 @@ const AdminController = {
             // After Updating the image name in the db, we need to delete the old
             // image from the storage.
             console.log(error.message);
-            await removeImage('remove_new_file', 0);
-            return res.status(404).json({
+            return res.status(constants.STATUS_CODE.SUCCESS).json({
                 status: false,
-                message: `Couldn't find active product`,
+                message: error.message,
                 data: []
             });
         }
@@ -815,14 +953,14 @@ const AdminController = {
 
                                     await transaction.commit();
 
-                                    const customer =  await getUser(order_id);
+                                    const customer = await getUser(order_id);
 
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_I} ${helpers.titleCase(customer[0].first_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_ACCEPTED.MESSAGE_II}`;
                                     console.log(notification_title, notification_body);
 
                                     notification.send_notification(customer[0].device_id, notification_title, notification_body);
-                                    
+
                                     return res.status(constants.STATUS_CODE.SUCCESS).json({
                                         status: true,
                                         message: "Order Confirmed. This order has been moved to Active Orders List. Thank you!",
@@ -896,7 +1034,7 @@ const AdminController = {
 
                                     await transaction.commit();
 
-                                    const customer =  await getUser(order_id);
+                                    const customer = await getUser(order_id);
 
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_I} ${helpers.titleCase(customer[0].first_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_REJECTED.MESSAGE_II}`;
@@ -950,7 +1088,7 @@ const AdminController = {
                         console.log(order);
 
                         if (order) {
-                            
+
                             const existingOrder = await models.Order.findOne({
                                 where: {
                                     id: order_id,
@@ -976,7 +1114,7 @@ const AdminController = {
 
                                     await transaction.commit();
 
-                                    const customer =  await getUser(order_id);
+                                    const customer = await getUser(order_id);
 
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_I} ${helpers.titleCase(customer[0].first_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_PICKING.MESSAGE_II}`;
@@ -1030,7 +1168,7 @@ const AdminController = {
                         console.log(completedOrder);
 
                         if (completedOrder) {
-                            
+
                             const existingOrder = await models.Order.findOne({
                                 where: {
                                     id: order_id,
@@ -1056,7 +1194,7 @@ const AdminController = {
 
                                     await transaction.commit();
 
-                                    const customer =  await getUser(order_id);
+                                    const customer = await getUser(order_id);
 
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_I} ${helpers.titleCase(customer[0].first_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.PICKING_COMPLETED.MESSAGE_II}`;
@@ -1107,7 +1245,7 @@ const AdminController = {
                         }, {
                             transaction: transaction
                         });
-                        console.log("Deliver order", deliverOrder);
+                        console.log("Deliver order", deliverOrder.order_name);
 
                         if (deliverOrder) {
                             console.log("inside delivery order")
@@ -1137,9 +1275,7 @@ const AdminController = {
 
                                     await transaction.commit();
 
-                                    await transaction.commit();
-
-                                    const customer =  await getUser(order_id);
+                                    const customer = await getUser(order_id);
 
                                     let notification_title = constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.TITLE;
                                     let notification_body = `${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.MESSAGE_I} ${helpers.titleCase(customer[0].first_name)}. ${constants.NOTIFICATION.STATUS_NOTIFICATION.ORDER_DELIVERED.MESSAGE_II}`;
@@ -1286,15 +1422,21 @@ let getOrdersList = async (flag) => {
 
 }
 
-let removeImage = async (flag, id) => {
+let removeImage = async (flag, id, model) => {
     console.log("Looking for", flag, id);
     let sourceUrls = "";
     if (flag === "remove_new_file") {
         sourceUrls = `./public/uploads/${global.fileUploadeWithName}`;
     } else {
-        activeProduct = await models.Product.findByPk(id);
-        sourceUrls = `./public/uploads/${activeProduct.image1}`;
+        if (model === "products") {
+            activeProduct = await models.Product.findByPk(id);
+            sourceUrls = `./public/uploads/${activeProduct.image1}`;
+        } else if (model === "category") {
+            activeProduct = await models.Product.findByPk(id);
+            sourceUrls = `./public/uploads/${activeProduct.image}`;
+        }
     }
+
     fs.unlinkSync(sourceUrls);
 }
 

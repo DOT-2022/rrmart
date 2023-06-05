@@ -30,12 +30,14 @@ let upload = multer({ storage: fileStorage });
 // Routes for Categories
 router.post('/categories/create', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.createNewCategory);
 router.get('/categories/list', [passport.authenticate('jwt', { session: false })], adminController.getAllCategories);
-router.post('/categories/update', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateCategory);
+router.post('/categories/update', [passport.authenticate('jwt', { session: false })], adminController.updateCategory);
+router.post('/categories/update/image', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateCategory);
 
 // Routes for Products
 router.post('/products/create', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.createNewProduct);
 router.get('/products/list', [passport.authenticate('jwt', { session: false })], adminController.getAllProudcts);
-router.post('/products/update', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateProduct);
+router.post('/products/update', [passport.authenticate('jwt', { session: false })], adminController.updateProduct);
+router.post('/products/update/image', [passport.authenticate('jwt', { session: false }), upload.single("image")], adminController.updateProductImage);
 
 // Routes for Orders
 router.get('/orders/active_orders', [passport.authenticate('jwt', { session: false })], adminController.getAllLatestOrders);
@@ -44,4 +46,6 @@ router.get('/orders/active_orders/:order_id/:tab', [passport.authenticate('jwt',
 router.post('/orders/active_orders/change_status', [passport.authenticate('jwt', { session: false })], adminController.changeOrderStatus);
 // Routes for Store
 router.get('/store/all', [passport.authenticate('jwt', { session: false })], adminController.getStoreDetails);
+router.get('/users/list', [passport.authenticate('jwt', { session: false })], adminController.getUsersDetails);
+
 module.exports = router;
