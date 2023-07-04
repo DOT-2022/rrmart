@@ -13,13 +13,13 @@ const constants = {
     },
     BASE_URL: {
         LOCAL: `http://localhost:${process.env.PORT}/api/v1/`,
-        PRODUCTION: 'http://43.205.136.224:${process.env.PORT}/api/v1/'
+        PRODUCTION: 'http://43.205.209.86:${process.env.PORT}/api/v1/'
     },
     NOTIFICATION: {
         FCM_BASE_URL: 'https://fcm.googleapis.com/fcm/send',
         TITLE: "RR MART - OTP",
         MESSAGE_I: 'Never share your OTP with others. You are receiving this message to verify your account.',
-        MESSAGE_II : 'Your verification OTP is',
+        MESSAGE_II: 'Your verification OTP is',
         STATUS_NOTIFICATION: {
             NEW_ORDER: {
                 TITLE: 'VSSV-Mart:New order',
