@@ -1329,8 +1329,8 @@ const AdminController = {
 }
 
 let transformImage = async (items, fieldName) => {
-    if (fieldName === 'image1') items.map((x) => x.image1 = 'public/uploads/' + x.image1);;
-    if (fieldName === 'image') items.map((x) => x.image = 'public/uploads/' + x.image);;
+    if (fieldName === 'image1') items.map((x) => x.image1 = 'public/uploads/' + x.image1);
+    if (fieldName === 'image') items.map((x) => x.image = 'public/uploads/' + x.image);
     console.log('items transforemd', items)
     return items;
 }

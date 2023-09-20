@@ -23,7 +23,12 @@ require('./src/config/db_config');
 app.use('/public/uploads', express.static('public/uploads'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'http://www.vssv.online',
+        methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
+    }
+));
 
 app.get('/', (req, res) => res.send('The Server is running at port ' + port))
 
