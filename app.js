@@ -21,7 +21,7 @@ if (!port) {
 require('./src/config/db_config');
 
 // CORS middleware
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -32,6 +32,7 @@ app.use(function(req, res, next) {
 app.use('/public/uploads', express.static('public/uploads'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors());
 
 app.get('/', (req, res) => res.send('The Server is running at port ' + port))
 
