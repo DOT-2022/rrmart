@@ -21,17 +21,24 @@ if (!port) {
 require('./src/config/db_config');
 
 // CORS middleware
-const allowCrossDomain = (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    next();
+const corsOpts = {
+  origin: '*',
+
+  methods: [
+    'GET',
+    'POST',
+  ],
+
+  allowedHeaders: [
+    'Content-Type',
+  ],
 };
+
+app.use(cors(corsOpts));
 
 app.use('/public/uploads', express.static('public/uploads'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(allowCrossDomain);
 
 app.get('/', (req, res) => res.send('The Server is running at port ' + port))
 
